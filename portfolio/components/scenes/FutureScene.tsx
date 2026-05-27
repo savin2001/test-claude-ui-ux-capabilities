@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { ContactModal } from '@/components/ui/ContactModal'
+import { useContactModal } from '@/lib/contactModal'
 
 interface Particle {
   x: number; y: number; vx: number; vy: number
@@ -65,7 +65,7 @@ export function FutureScene() {
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 })
   const particlesRef = useRef<Particle[]>([])
   const rafRef = useRef<number>(0)
-  const [contactOpen, setContactOpen] = useState(false)
+  const { openModal } = useContactModal()
 
   useEffect(() => {
     if (!isInView || !canvasRef.current) return
@@ -248,7 +248,7 @@ export function FutureScene() {
               </p>
 
               <button
-                onClick={() => setContactOpen(true)}
+                onClick={() => openModal()}
                 className="btn-primary w-full justify-center mb-3 cursor-pointer"
                 style={{ display: 'flex' }}
               >
@@ -322,7 +322,6 @@ export function FutureScene() {
         </motion.div>
       </div>
 
-      <ContactModal isOpen={contactOpen} onClose={() => setContactOpen(false)} />
     </section>
   )
 }

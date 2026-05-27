@@ -3,7 +3,7 @@ import { ServicesScene } from '@/components/scenes/ServicesScene'
 import { SystemArchitecture } from '@/components/scenes/SystemArchitecture'
 import { CareerJourney } from '@/components/scenes/CareerJourney'
 import { GalaxyWrapper } from '@/components/scenes/GalaxyWrapper'
-import { ReliabilityCenter } from '@/components/scenes/ReliabilityCenter'
+import { TestimonialsScene } from '@/components/scenes/TestimonialsScene'
 import { NeuralNetwork } from '@/components/scenes/NeuralNetwork'
 import { BuilderLab } from '@/components/scenes/BuilderLab'
 import { FutureScene } from '@/components/scenes/FutureScene'
@@ -26,8 +26,8 @@ export default function Home() {
       {/* Scene 4: GitHub Galaxy */}
       <GalaxyWrapper />
 
-      {/* Scene 5: Reliability Control Center */}
-      <ReliabilityCenter />
+      {/* Scene 5: Testimonials */}
+      <TestimonialsScene />
 
       {/* Scene 6: Skills Neural Network */}
       <NeuralNetwork />

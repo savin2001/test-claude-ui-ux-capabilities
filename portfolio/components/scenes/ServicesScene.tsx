@@ -3,24 +3,25 @@
 import { useRef, useState } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { services } from '@/lib/data'
+import { useContactModal } from '@/lib/contactModal'
 
 const AVAILABILITY_CTAS = [
   {
     label: 'Hire for a Project',
     sub: 'Fixed scope · Defined deliverables',
-    href: 'mailto:osukasavin@gmail.com?subject=Project Inquiry — [Project Name]',
+    subject: 'Project Inquiry',
     primary: true,
   },
   {
     label: 'Consulting Retainer',
     sub: 'Monthly · Ongoing technical leadership',
-    href: 'mailto:osukasavin@gmail.com?subject=Consulting Retainer Inquiry',
+    subject: 'Consulting Retainer',
     primary: false,
   },
   {
     label: 'Full-Time Opportunity',
     sub: 'Remote-friendly · Open to relocation',
-    href: 'mailto:osukasavin@gmail.com?subject=Opportunity for Savin Osuka',
+    subject: 'Full-Time Opportunity',
     primary: false,
   },
 ]
@@ -118,6 +119,7 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
 export function ServicesScene() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 })
+  const { openModal } = useContactModal()
 
   return (
     <section
@@ -214,10 +216,10 @@ export function ServicesScene() {
 
             <div className="flex flex-col sm:flex-row gap-3">
               {AVAILABILITY_CTAS.map((cta) => (
-                <a
+                <button
                   key={cta.label}
-                  href={cta.href}
-                  className="flex flex-col gap-0.5 px-5 py-3.5 rounded-xl transition-all duration-200 cursor-none text-center"
+                  onClick={() => openModal(cta.subject)}
+                  className="flex flex-col gap-0.5 px-5 py-3.5 rounded-xl transition-all duration-200 cursor-pointer text-center"
                   style={{
                     background: cta.primary ? '#F59E0B' : 'rgba(255,255,255,0.04)',
                     color: cta.primary ? '#0A0908' : '#FAFAF9',
@@ -232,7 +234,7 @@ export function ServicesScene() {
                   >
                     {cta.sub}
                   </span>
-                </a>
+                </button>
               ))}
             </div>
           </div>

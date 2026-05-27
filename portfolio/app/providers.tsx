@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ContactModalProvider } from '@/lib/contactModal'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -38,5 +39,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  return <>{children}</>
+  return <ContactModalProvider>{children}</ContactModalProvider>
 }

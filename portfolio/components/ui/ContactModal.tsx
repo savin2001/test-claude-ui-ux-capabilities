@@ -15,23 +15,26 @@ const SUBJECT_PRESETS = [
 interface ContactModalProps {
   isOpen: boolean
   onClose: () => void
+  initialSubject?: string
 }
 
-export function ContactModal({ isOpen, onClose }: ContactModalProps) {
+export function ContactModal({ isOpen, onClose, initialSubject }: ContactModalProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [subject, setSubject] = useState(SUBJECT_PRESETS[0])
+  const [subject, setSubject] = useState(initialSubject ?? SUBJECT_PRESETS[0])
   const [customSubject, setCustomSubject] = useState('')
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
 
-  // Focus name field when modal opens
+  // Focus name field when modal opens; reset subject if initialSubject changes
   useEffect(() => {
     if (isOpen) {
       setSent(false)
+      setSubject(initialSubject ?? SUBJECT_PRESETS[0])
       setTimeout(() => nameRef.current?.focus(), 120)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   // Close on Escape

@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShaderBackground } from '@/components/ui/ShaderBackground'
+import { AnimatedTextCycle } from '@/components/ui/AnimatedTextCycle'
+import { useContactModal } from '@/lib/contactModal'
 
 const BOOT_LINES = [
   { text: '> Initializing Savin.OS v∞.0.0...', delay: 200, color: '#22C55E' },
@@ -41,6 +43,7 @@ export function BootSequence() {
   const [bootComplete, setBootComplete] = useState(false)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
+  const { openModal } = useContactModal()
 
   useEffect(() => {
     BOOT_LINES.forEach((line, i) => {
@@ -164,14 +167,29 @@ export function BootSequence() {
                 to multi-tenant SaaS platforms that scale.
               </motion.p>
 
-              <motion.p
+              {/* Animated cycling role */}
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="font-mono text-sm text-stone-500 mb-8"
+                className="text-stone-400 text-base mb-8 flex items-center gap-1 flex-wrap"
               >
-                Digital Channels · Platform Reliability · FinTech · Security
-              </motion.p>
+                <span>Currently focused on</span>
+                <span className="relative inline-flex">
+                  <AnimatedTextCycle
+                    words={[
+                      'payment infrastructure',
+                      'platform reliability',
+                      'digital channels',
+                      'FinTech systems',
+                      'AI integrations',
+                      'security engineering',
+                    ]}
+                    interval={2600}
+                    className="text-amber-400"
+                  />
+                </span>
+              </motion.div>
 
               {/* CTAs */}
               <motion.div
@@ -180,21 +198,17 @@ export function BootSequence() {
                 transition={{ delay: 0.85 }}
                 className="flex flex-wrap gap-3"
               >
-                <a
-                  href="#services"
+                <button
+                  onClick={() => openModal()}
                   className="btn-primary"
                   data-cursor="HIRE ME"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
-                  }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
                     <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
                   </svg>
                   Hire Me
-                </a>
+                </button>
                 <a
                   href="#galaxy"
                   className="btn-ghost"

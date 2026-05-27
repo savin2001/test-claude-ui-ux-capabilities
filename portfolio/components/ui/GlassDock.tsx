@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useContactModal } from '@/lib/contactModal'
 
 const navItems = [
   { id: 'boot', label: 'Home', icon: '⌂', href: '#boot' },
-  { id: 'services', label: 'Hire Me', icon: '◈', href: '#services' },
+  { id: 'services', label: 'Services', icon: '◈', href: '#services' },
   { id: 'system', label: 'System', icon: '⬡', href: '#system' },
   { id: 'journey', label: 'Journey', icon: '→', href: '#journey' },
   { id: 'galaxy', label: 'Projects', icon: '◉', href: '#galaxy' },
-  { id: 'reliability', label: 'Ops', icon: '▲', href: '#reliability' },
+  { id: 'testimonials', label: 'Reviews', icon: '✦', href: '#testimonials' },
   { id: 'skills', label: 'Skills', icon: '◎', href: '#skills' },
   { id: 'lab', label: 'Lab', icon: '⚗', href: '#lab' },
   { id: 'future', label: 'Contact', icon: '∞', href: '#future' },
@@ -42,6 +43,7 @@ export function GlassDock() {
   const [activeSection, setActiveSection] = useState('boot')
   const [isVisible, setIsVisible] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const { openModal } = useContactModal()
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 3500)
@@ -143,7 +145,7 @@ export function GlassDock() {
             })}
           </div>
 
-          {/* Social links — separate pill */}
+          {/* Social links */}
           <div
             className="flex items-center gap-0.5 px-2 py-2 rounded-2xl"
             style={{
@@ -196,6 +198,26 @@ export function GlassDock() {
               )
             })}
           </div>
+
+          {/* Hire Me CTA */}
+          <motion.button
+            onClick={() => openModal()}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-xs cursor-pointer"
+            style={{
+              background: '#F59E0B',
+              color: '#0A0908',
+              boxShadow: '0 8px 24px rgba(245,158,11,0.35)',
+            }}
+            aria-label="Hire Me — open contact form"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+              <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+            </svg>
+            Hire Me
+          </motion.button>
         </motion.nav>
       )}
     </AnimatePresence>
