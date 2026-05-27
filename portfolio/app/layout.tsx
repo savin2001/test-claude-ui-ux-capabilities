@@ -58,6 +58,41 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              name: 'Savin Osuka',
+              jobTitle: 'Systems Engineer',
+              description:
+                'I build payment infrastructure, platform reliability, and digital channel systems. Based in Nairobi, working globally.',
+              url: 'https://savin-osuka.netlify.app',
+              email: 'osukasavin@gmail.com',
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Nairobi',
+                addressCountry: 'KE',
+              },
+              sameAs: [
+                'https://github.com/savin2001',
+                'https://linkedin.com/in/savin-osuka-320225350',
+                'https://twitter.com/SavinOsuka',
+              ],
+              knowsAbout: [
+                'FinTech Engineering',
+                'Payment Infrastructure',
+                'Platform Reliability Engineering',
+                'Digital Channels',
+                'Cloud Infrastructure',
+                'Security Engineering',
+                'M-Pesa Integration',
+                'Anthropic Claude API',
+              ],
+            }),
+          }}
+        />
       </head>
       <body>
         <Providers>

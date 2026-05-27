@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ShaderBackground } from '@/components/ui/ShaderBackground'
 
 const BOOT_LINES = [
   { text: '> Initializing Savin.OS v∞.0.0...', delay: 200, color: '#22C55E' },
@@ -34,85 +35,6 @@ const EDGES = [
   ['infra', 'security'], ['infra', 'observe'],
 ]
 
-const PILLARS = [
-  { text: 'BUILD', color: '#F59E0B' },
-  { text: 'OPERATE', color: '#10B981' },
-  { text: 'SECURE', color: '#EF4444' },
-  { text: 'SCALE', color: '#0D9488' },
-]
-
-// 3D floating geometry pieces
-function FloatingGeometry() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-      {/* Wireframe cube */}
-      <div
-        className="absolute top-[15%] right-[8%] shape-3d opacity-20"
-        style={{ animationDelay: '0s' }}
-      >
-        <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-          <rect x="15" y="15" width="40" height="40" stroke="#F59E0B" strokeWidth="0.8"/>
-          <rect x="25" y="5" width="40" height="40" stroke="#F59E0B" strokeWidth="0.5" strokeDasharray="2 3"/>
-          <line x1="15" y1="15" x2="25" y2="5" stroke="#F59E0B" strokeWidth="0.5"/>
-          <line x1="55" y1="15" x2="65" y2="5" stroke="#F59E0B" strokeWidth="0.5"/>
-          <line x1="55" y1="55" x2="65" y2="45" stroke="#F59E0B" strokeWidth="0.5"/>
-          <line x1="15" y1="55" x2="25" y2="45" stroke="#F59E0B" strokeWidth="0.5"/>
-        </svg>
-      </div>
-
-      {/* Spinning ring */}
-      <motion.div
-        className="absolute top-[55%] right-[12%] opacity-15"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-      >
-        <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-          <ellipse cx="60" cy="60" rx="50" ry="20" stroke="#0D9488" strokeWidth="1" strokeDasharray="4 4"/>
-          <ellipse cx="60" cy="60" rx="50" ry="20" stroke="#0D9488" strokeWidth="0.5"
-            transform="rotate(60 60 60)"/>
-          <ellipse cx="60" cy="60" rx="50" ry="20" stroke="#0D9488" strokeWidth="0.5"
-            transform="rotate(120 60 60)"/>
-          <circle cx="60" cy="60" r="6" fill="#0D9488" opacity="0.4"/>
-        </svg>
-      </motion.div>
-
-      {/* Triangle grid */}
-      <div
-        className="absolute bottom-[20%] right-[5%] shape-3d opacity-15"
-        style={{ animationDelay: '-3s' }}
-      >
-        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
-          <polygon points="30,5 55,50 5,50" stroke="#10B981" strokeWidth="0.8" fill="none"/>
-          <polygon points="30,18 45,43 15,43" stroke="#10B981" strokeWidth="0.5" fill="none"/>
-          <polygon points="30,30 38,43 22,43" stroke="#10B981" strokeWidth="0.4" fill="none"/>
-        </svg>
-      </div>
-
-      {/* Floating dots grid */}
-      <div className="absolute top-[10%] left-[5%] opacity-10">
-        <svg width="100" height="100" viewBox="0 0 100 100">
-          {[0,1,2,3,4].map(r => [0,1,2,3,4].map(c => (
-            <circle key={`${r}-${c}`} cx={10 + c * 20} cy={10 + r * 20} r="1.5" fill="#A8A29E"/>
-          )))}
-        </svg>
-      </div>
-
-      {/* Octahedron wireframe */}
-      <motion.div
-        className="absolute top-[30%] left-[3%] opacity-15"
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-        style={{ perspective: '200px' }}
-      >
-        <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
-          <polygon points="35,5 65,35 35,65 5,35" stroke="#0EA5E9" strokeWidth="0.8" fill="none"/>
-          <line x1="35" y1="5" x2="35" y2="65" stroke="#0EA5E9" strokeWidth="0.4" strokeDasharray="3 3"/>
-          <line x1="5" y1="35" x2="65" y2="35" stroke="#0EA5E9" strokeWidth="0.4" strokeDasharray="3 3"/>
-        </svg>
-      </motion.div>
-    </div>
-  )
-}
 
 export function BootSequence() {
   const [visibleLines, setVisibleLines] = useState<number[]>([])
@@ -135,14 +57,17 @@ export function BootSequence() {
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
       style={{ background: '#0A0908' }}
     >
-      {/* BG radial */}
+      {/* Shader background */}
+      <ShaderBackground />
+
+      {/* BG radial overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-[1]"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(245,158,11,0.05) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(245,158,11,0.04) 0%, transparent 65%)',
         }}
       />
-      <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 grid-bg opacity-20 pointer-events-none z-[1]" />
 
       {/* Terminal boot */}
       <AnimatePresence>
@@ -152,7 +77,7 @@ export function BootSequence() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.98 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 flex items-center justify-center px-4 z-20"
+            className="absolute inset-0 flex items-center justify-center px-4 z-30"
           >
             <div className="terminal-window w-full max-w-2xl">
               <div className="terminal-header">
@@ -191,60 +116,34 @@ export function BootSequence() {
       <AnimatePresence>
         {bootComplete && (
           <div className="relative z-10 w-full max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center min-h-screen py-20">
-            <FloatingGeometry />
 
             {/* Left: Text */}
             <div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="scene-label mb-6"
-              >
-                ◈ NAIROBI, KENYA — AVAILABLE FOR PROJECTS
-              </motion.p>
-
-              {/* Availability badge */}
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mb-6 font-mono text-xs"
-                style={{
-                  background: 'rgba(16,185,129,0.08)',
-                  border: '1px solid rgba(16,185,129,0.25)',
-                  color: '#10B981',
-                }}
+                transition={{ delay: 0.15 }}
+                className="flex items-center gap-3 mb-6"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Open to projects · Consulting · Full-time opportunities
+                <span className="scene-label">◈ NAIROBI, KENYA</span>
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-xs"
+                  style={{
+                    background: 'rgba(16,185,129,0.08)',
+                    border: '1px solid rgba(16,185,129,0.25)',
+                    color: '#10B981',
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Available
+                </span>
               </motion.div>
-
-              {/* Pillars */}
-              <div className="flex flex-wrap gap-2 mb-8">
-                {PILLARS.map((p, i) => (
-                  <motion.span
-                    key={p.text}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.07 }}
-                    className="font-mono text-xs font-semibold tracking-[0.2em] px-3 py-1.5 rounded-md"
-                    style={{
-                      color: p.color,
-                      border: `1px solid ${p.color}25`,
-                      background: `${p.color}08`,
-                    }}
-                  >
-                    {p.text}
-                  </motion.span>
-                ))}
-              </div>
 
               {/* Name */}
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+                transition={{ delay: 0.3, duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
                 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-5"
                 data-logo
               >
@@ -253,11 +152,11 @@ export function BootSequence() {
                 <span style={{ color: '#F59E0B' }}>OSUKA</span>
               </motion.h1>
 
-              {/* Value proposition — hire-me framing */}
+              {/* Tagline */}
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
+                transition={{ delay: 0.55 }}
                 className="text-stone-300 text-lg leading-relaxed mb-3 max-w-lg"
               >
                 I architect and operate the systems that power digital commerce,
@@ -265,33 +164,20 @@ export function BootSequence() {
                 to multi-tenant SaaS platforms that scale.
               </motion.p>
 
-              <motion.div
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.95 }}
-                className="space-y-1 mb-8"
+                transition={{ delay: 0.7 }}
+                className="font-mono text-sm text-stone-500 mb-8"
               >
-                {[
-                  '▶ Digital Channels Engineer',
-                  '  Platform Reliability Engineer',
-                  '  Infrastructure & Systems Architect',
-                  '  FinTech Builder · Security Engineer',
-                ].map((role, i) => (
-                  <p
-                    key={role}
-                    className="font-mono text-sm"
-                    style={{ color: i === 0 ? '#A8A29E' : '#57534E' }}
-                  >
-                    {role}
-                  </p>
-                ))}
-              </motion.div>
+                Digital Channels · Platform Reliability · FinTech · Security
+              </motion.p>
 
               {/* CTAs */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1 }}
+                transition={{ delay: 0.85 }}
                 className="flex flex-wrap gap-3"
               >
                 <a
@@ -330,34 +216,6 @@ export function BootSequence() {
                   </svg>
                   GitHub
                 </a>
-              </motion.div>
-
-              {/* Easter egg hints */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 2.5 }}
-                className="mt-8 p-3 rounded-xl font-mono text-xs"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                }}
-              >
-                <p className="text-stone-600 mb-1">▸ Hidden commands — try typing anywhere:</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {[
-                    { cmd: 'whoami', hint: 'identity check' },
-                    { cmd: 'deploy()', hint: 'ship something' },
-                    { cmd: 'incident()', hint: 'break-glass' },
-                    { cmd: 'sudo architect', hint: 'elevate access' },
-                  ].map(({ cmd, hint }) => (
-                    <span key={cmd}>
-                      <span style={{ color: '#F59E0B' }}>{cmd}</span>
-                      <span className="text-stone-700"> // {hint}</span>
-                    </span>
-                  ))}
-                </div>
-                <p className="text-stone-700 mt-1">↑↑↓↓←→←→BA — unlocks blueprint mode</p>
               </motion.div>
             </div>
 

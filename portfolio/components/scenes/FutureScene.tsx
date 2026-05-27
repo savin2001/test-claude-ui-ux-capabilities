@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { ContactModal } from '@/components/ui/ContactModal'
 
 interface Particle {
   x: number; y: number; vx: number; vy: number
@@ -64,6 +65,7 @@ export function FutureScene() {
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 })
   const particlesRef = useRef<Particle[]>([])
   const rafRef = useRef<number>(0)
+  const [contactOpen, setContactOpen] = useState(false)
 
   useEffect(() => {
     if (!isInView || !canvasRef.current) return
@@ -245,20 +247,19 @@ export function FutureScene() {
                 I respond within 24 hours. Remote-friendly, globally available.
               </p>
 
-              <a
-                href="mailto:osukasavin@gmail.com?subject=Project Inquiry — Let's build something"
-                className="btn-primary w-full justify-center mb-3 text-center"
+              <button
+                onClick={() => setContactOpen(true)}
+                className="btn-primary w-full justify-center mb-3 cursor-pointer"
                 style={{ display: 'flex' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                 </svg>
                 Start a Conversation
-              </a>
+              </button>
 
               <p className="font-mono text-xs text-stone-600 text-center">
-                osukasavin@gmail.com
+                osukasavin@gmail.com · responds within 24h
               </p>
             </div>
 
@@ -320,6 +321,8 @@ export function FutureScene() {
           </p>
         </motion.div>
       </div>
+
+      <ContactModal isOpen={contactOpen} onClose={() => setContactOpen(false)} />
     </section>
   )
 }
