@@ -21,14 +21,15 @@ interface Edge {
 }
 
 const CLUSTER_POSITIONS: Record<string, { x: number; y: number }> = {
-  infrastructure: { x: 0.25, y: 0.25 },
-  security: { x: 0.75, y: 0.25 },
-  cloud: { x: 0.5, y: 0.15 },
-  observability: { x: 0.8, y: 0.6 },
-  automation: { x: 0.2, y: 0.6 },
-  fintech: { x: 0.5, y: 0.8 },
-  architecture: { x: 0.5, y: 0.5 },
-  code: { x: 0.7, y: 0.45 },
+  infrastructure: { x: 0.22, y: 0.25 },
+  security: { x: 0.72, y: 0.22 },
+  cloud: { x: 0.48, y: 0.12 },
+  observability: { x: 0.82, y: 0.58 },
+  automation: { x: 0.18, y: 0.62 },
+  fintech: { x: 0.48, y: 0.82 },
+  architecture: { x: 0.48, y: 0.48 },
+  code: { x: 0.72, y: 0.42 },
+  ai: { x: 0.26, y: 0.44 },
 }
 
 export function NeuralNetwork() {
