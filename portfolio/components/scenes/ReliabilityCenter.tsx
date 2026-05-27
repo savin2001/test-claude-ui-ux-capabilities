@@ -72,8 +72,8 @@ export function ReliabilityCenter() {
           <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4">
             Reliability is
             <span
-              className="text-transparent bg-clip-text ml-3"
-              style={{ backgroundImage: 'linear-gradient(135deg, #22C55E, #00F0FF)' }}
+              className="ml-3"
+              style={{ color: '#10B981' }}
             >
               a Feature
             </span>

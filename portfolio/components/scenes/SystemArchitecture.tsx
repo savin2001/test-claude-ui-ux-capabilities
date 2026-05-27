@@ -10,7 +10,7 @@ const NODES = [
     description: 'End users across mobile, web, USSD, and agent banking channels',
     x: '50%',
     y: '8%',
-    color: '#00F0FF',
+    color: '#F59E0B',
     icon: '◉',
     category: 'external',
   },
@@ -151,8 +151,8 @@ export function SystemArchitecture() {
           <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4">
             How Systems
             <span
-              className="text-transparent bg-clip-text ml-3"
-              style={{ backgroundImage: 'linear-gradient(135deg, #A855F7, #00F0FF)' }}
+              className="ml-3"
+              style={{ color: '#0D9488' }}
             >
               Connect
             </span>
@@ -315,7 +315,7 @@ export function SystemArchitecture() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
           {[
             { label: 'Uptime SLA', value: '99.97%', color: '#22C55E' },
-            { label: 'Deployments', value: '1,200+', color: '#00F0FF' },
+            { label: 'Deployments', value: '1,200+', color: '#F59E0B' },
             { label: 'Services', value: '35+', color: '#A855F7' },
             { label: 'Incidents Resolved', value: '147', color: '#F59E0B' },
           ].map((stat) => (

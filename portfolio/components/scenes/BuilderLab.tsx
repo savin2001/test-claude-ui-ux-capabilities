@@ -224,8 +224,8 @@ export function BuilderLab() {
           <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4">
             Projects
             <span
-              className="text-transparent bg-clip-text ml-3"
-              style={{ backgroundImage: 'linear-gradient(135deg, #EC4899, #F59E0B)' }}
+              className="ml-3"
+              style={{ color: '#F59E0B' }}
             >
               Suspended
             </span>

@@ -291,8 +291,8 @@ export function NeuralNetwork() {
           <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4">
             Knowledge
             <span
-              className="text-transparent bg-clip-text ml-3"
-              style={{ backgroundImage: 'linear-gradient(135deg, #A855F7, #EC4899)' }}
+              className="ml-3"
+              style={{ color: '#0D9488' }}
             >
               Clusters
             </span>

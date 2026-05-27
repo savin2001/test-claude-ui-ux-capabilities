@@ -1,4 +1,5 @@
 import { BootSequence } from '@/components/scenes/BootSequence'
+import { ServicesScene } from '@/components/scenes/ServicesScene'
 import { SystemArchitecture } from '@/components/scenes/SystemArchitecture'
 import { CareerJourney } from '@/components/scenes/CareerJourney'
 import { GalaxyWrapper } from '@/components/scenes/GalaxyWrapper'
@@ -13,7 +14,10 @@ export default function Home() {
       {/* Scene 1: Boot Sequence / Hero */}
       <BootSequence />
 
-      {/* Scene 2: System Architecture */}
+      {/* Scene 2: Services — What I Build For You */}
+      <ServicesScene />
+
+      {/* Scene 3: System Architecture */}
       <SystemArchitecture />
 
       {/* Scene 3: Career Journey (horizontal scroll) */}
