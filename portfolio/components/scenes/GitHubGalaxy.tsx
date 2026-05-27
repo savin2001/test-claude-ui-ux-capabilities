@@ -1,198 +1,152 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import {
+  useRef, useState, useEffect, useCallback, useMemo,
+  forwardRef, type ForwardedRef,
+} from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { repos, type Repository } from '@/lib/data'
 
-// ─── Golden-angle spiral layout ───────────────────────────────────────────────
-// Each repo gets a unique fixed position — fully clickable, no overlaps.
+// ─── Orbital maths ────────────────────────────────────────────────────────────
+
 const GOLDEN_ANGLE = 137.508 * (Math.PI / 180)
 
-function buildPositions(
+/** Build initial (t=0) golden-spiral positions — used only to derive orbital r/θ */
+function buildInitialPositions(
   items: Repository[],
   cx: number,
   cy: number,
-  minR = 60,
-  step = 36,
+  minR = 55,
+  step = 34,
 ): Map<string, { x: number; y: number }> {
   const map = new Map<string, { x: number; y: number }>()
   items.forEach((repo, i) => {
     const r = minR + Math.sqrt(i + 1) * step
     const theta = i * GOLDEN_ANGLE
-    map.set(repo.id, {
-      x: cx + r * Math.cos(theta),
-      y: cy + r * Math.sin(theta),
-    })
+    map.set(repo.id, { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) })
   })
   return map
 }
 
-// ─── Connection lines between repos in the same category ─────────────────────
-function ConnectionLines({
-  positions,
-  repos,
-  activeCategory,
-  selectedId,
-}: {
-  positions: Map<string, { x: number; y: number }>
-  repos: Repository[]
-  activeCategory: string
-  selectedId: string | null
-}) {
-  const groups = new Map<string, Repository[]>()
-  repos.forEach(r => {
-    const arr = groups.get(r.category) ?? []
-    arr.push(r)
-    groups.set(r.category, arr)
-  })
-
-  const lines: { x1: number; y1: number; x2: number; y2: number; color: string; active: boolean }[] = []
-  groups.forEach((members, cat) => {
-    // Only draw lines when that category is active or a member is selected
-    const isActive =
-      activeCategory === cat ||
-      members.some(m => m.id === selectedId)
-
-    for (let i = 0; i < members.length - 1; i++) {
-      const a = positions.get(members[i].id)
-      const b = positions.get(members[i + 1].id)
-      if (!a || !b) continue
-      lines.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y, color: members[0].planetColor, active: isActive })
-    }
-  })
-
-  return (
-    <>
-      {lines.map((l, i) => (
-        <motion.line
-          key={i}
-          x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-          stroke={l.color}
-          strokeWidth={l.active ? 1 : 0.4}
-          strokeOpacity={l.active ? 0.35 : 0.07}
-          strokeDasharray={l.active ? '5 4' : 'none'}
-          initial={false}
-          animate={{ strokeOpacity: l.active ? 0.35 : 0.07 }}
-          transition={{ duration: 0.3 }}
-        />
-      ))}
-    </>
-  )
+interface OrbitalParams {
+  r: number       // orbital radius (px)
+  angle0: number  // initial angle (rad)
+  speed: number   // angular speed (rad / ms)
 }
 
-// ─── Single planet node ───────────────────────────────────────────────────────
-function Planet({
-  repo,
-  pos,
-  isSelected,
-  isFiltered,
-  onClick,
-}: {
+/** Derive Kepler-like orbital params from initial positions */
+function buildOrbitalParams(
+  items: Repository[],
+  cx: number,
+  cy: number,
+): OrbitalParams[] {
+  const posMap = buildInitialPositions(items, cx, cy)
+  return items.map(repo => {
+    const pos = posMap.get(repo.id)!
+    const dx = pos.x - cx
+    const dy = pos.y - cy
+    const r = Math.max(Math.sqrt(dx * dx + dy * dy), 30)
+    const angle0 = Math.atan2(dy, dx)
+    // Outer planets move slower — approx Kepler T² ∝ r³ → ω ∝ r^{-1.5}
+    const speed = 0.000095 * Math.pow(55 / r, 1.1)
+    return { r, angle0, speed }
+  })
+}
+
+// ─── Planet ────────────────────────────────────────────────────────────────────
+// Renders centred at (0,0); parent <g> handles the transform
+
+interface PlanetProps {
   repo: Repository
-  pos: { x: number; y: number }
   isSelected: boolean
-  isFiltered: boolean
   onClick: () => void
-}) {
-  const size = 8 + repo.planetSize * 5
-  const [hovered, setHovered] = useState(false)
+}
+
+const Planet = forwardRef(function Planet(
+  { repo, isSelected, onClick }: PlanetProps,
+  ref: ForwardedRef<SVGGElement>,
+) {
+  const size = 7 + repo.planetSize * 4.5
 
   return (
-    <motion.g
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{
-        opacity: isFiltered ? 0.15 : 1,
-        scale: 1,
-      }}
-      transition={{ duration: 0.4 }}
-    >
-      {/* Glow ring when selected */}
-      {isSelected && (
-        <motion.circle
-          cx={pos.x} cy={pos.y}
-          r={size + 10}
-          fill="none"
-          stroke={repo.planetColor}
-          strokeWidth="1"
-          strokeOpacity="0.5"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-        />
-      )}
-
-      {/* Hover pulse ring */}
-      {hovered && !isSelected && (
-        <circle
-          cx={pos.x} cy={pos.y}
-          r={size + 6}
-          fill="none"
-          stroke={repo.planetColor}
-          strokeWidth="0.8"
-          strokeOpacity="0.3"
-        />
-      )}
-
-      {/* Planet body */}
+    <g ref={ref} onClick={onClick} style={{ cursor: 'pointer' }}>
       <defs>
-        <radialGradient id={`pg-${repo.id}`} cx="35%" cy="35%" r="70%">
-          <stop offset="0%" stopColor={repo.planetColor} stopOpacity="0.9" />
-          <stop offset="100%" stopColor={repo.planetColor} stopOpacity="0.25" />
+        <radialGradient id={`pg-${repo.id}`} cx="38%" cy="32%" r="70%">
+          <stop offset="0%" stopColor={repo.planetColor} stopOpacity="0.95" />
+          <stop offset="55%" stopColor={repo.planetColor} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={repo.planetColor} stopOpacity="0.18" />
         </radialGradient>
-        <filter id={`glow-${repo.id}`}>
-          <feGaussianBlur stdDeviation={isSelected || hovered ? '4' : '2'} result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        <filter id={`glow-${repo.id}`} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation={isSelected ? '5' : '2.5'} result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
 
+      {/* Selection pulse ring */}
+      {isSelected && (
+        <circle
+          r={size + 11}
+          fill="none"
+          stroke={repo.planetColor}
+          strokeWidth="1.2"
+          strokeOpacity="0.45"
+          strokeDasharray="4 3"
+        />
+      )}
+
+      {/* Invisible hit target — ensures easy clicking on small planets */}
+      <circle r={Math.max(size + 8, 18)} fill="transparent" />
+
+      {/* Planet body */}
       <circle
-        cx={pos.x} cy={pos.y}
         r={size}
         fill={`url(#pg-${repo.id})`}
         stroke={repo.planetColor}
-        strokeWidth={isSelected ? '1.5' : '0.8'}
-        strokeOpacity={isSelected ? '1' : '0.6'}
+        strokeWidth={isSelected ? 1.6 : 0.9}
+        strokeOpacity={isSelected ? 0.95 : 0.55}
         filter={`url(#glow-${repo.id})`}
-        style={{ cursor: 'pointer' }}
-        onClick={onClick}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
       />
 
-      {/* Language dot */}
+      {/* Language colour dot */}
       <circle
-        cx={pos.x + size * 0.65}
-        cy={pos.y - size * 0.65}
-        r="3"
+        cx={size * 0.62}
+        cy={-size * 0.62}
+        r="2.8"
         fill={repo.languageColor}
-        style={{ pointerEvents: 'none' }}
+        strokeWidth="0.8"
+        stroke="rgba(0,0,0,0.6)"
       />
 
-      {/* Label — always visible for selected; on hover otherwise */}
-      {(isSelected || hovered || repo.planetSize >= 2.5) && (
+      {/* Label — always for selected + large planets */}
+      {(isSelected || repo.planetSize >= 2.5) && (
         <text
-          x={pos.x}
-          y={pos.y + size + 14}
+          y={size + 14}
           textAnchor="middle"
-          fill={isSelected ? repo.planetColor : 'rgba(255,255,255,0.55)'}
-          fontSize="9"
+          fill={isSelected ? repo.planetColor : 'rgba(255,255,255,0.5)'}
+          fontSize={isSelected ? '10' : '9'}
+          fontWeight={isSelected ? '600' : '400'}
           fontFamily="'JetBrains Mono', monospace"
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
           {repo.name}
         </text>
       )}
-    </motion.g>
+    </g>
   )
-}
+})
 
-// ─── Star field ───────────────────────────────────────────────────────────────
+// ─── Star field ────────────────────────────────────────────────────────────────
+
 function StarField({ w, h }: { w: number; h: number }) {
   const stars = useRef(
-    Array.from({ length: 120 }, () => ({
+    Array.from({ length: 130 }, () => ({
       x: Math.random() * 100,
       y: Math.random() * 100,
-      r: Math.random() * 1.2 + 0.3,
-      o: Math.random() * 0.4 + 0.05,
+      r: Math.random() * 1.3 + 0.3,
+      o: Math.random() * 0.35 + 0.05,
     }))
   )
   return (
@@ -212,7 +166,8 @@ function StarField({ w, h }: { w: number; h: number }) {
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main component ────────────────────────────────────────────────────────────
+
 export default function GitHubGalaxy() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -221,9 +176,22 @@ export default function GitHubGalaxy() {
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
   const [filter, setFilter] = useState<string>('all')
   const [dims, setDims] = useState({ w: 600, h: 480 })
-  const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map())
 
-  // Responsive canvas dimensions
+  // One ref per planet — RAF writes transform directly
+  const planetGroupRefs = useRef<(SVGGElement | null)[]>([])
+
+  // Live animated positions (used for connection-line drawing and future hover logic)
+  const livePosRef = useRef<{ x: number; y: number }[]>([])
+
+  // Respects prefers-reduced-motion
+  const prefersReduced = useRef(false)
+  useEffect(() => {
+    prefersReduced.current =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }, [])
+
+  // Responsive canvas
   useEffect(() => {
     const el = svgRef.current
     if (!el) return
@@ -235,21 +203,70 @@ export default function GitHubGalaxy() {
     return () => obs.disconnect()
   }, [])
 
-  // Recompute positions when dims or filter changes
+  const filteredRepos = useMemo(
+    () => (filter === 'all' ? repos : repos.filter(r => r.category === filter)),
+    [filter],
+  )
+
+  const cx = dims.w / 2
+  const cy = dims.h / 2
+
+  // Recompute orbital params whenever the repo set or container changes
+  const orbitalParams = useMemo(
+    () => buildOrbitalParams(filteredRepos, cx, cy),
+    [filteredRepos, cx, cy],
+  )
+
+  // ── RAF animation loop ──────────────────────────────────────────────────────
   useEffect(() => {
-    const cx = dims.w / 2
-    const cy = dims.h / 2
-    const filtered = filter === 'all' ? repos : repos.filter(r => r.category === filter)
-    setPositions(buildPositions(filtered, cx, cy, 55, 34))
-  }, [dims, filter])
+    if (!isInView) return
 
-  const filteredRepos = filter === 'all' ? repos : repos.filter(r => r.category === filter)
+    let raf: number
+    const startTime = performance.now()
 
-  const categories = ['all', ...Array.from(new Set(repos.map(r => r.category)))]
+    // Initialise live position buffer
+    livePosRef.current = orbitalParams.map(p => ({
+      x: cx + p.r * Math.cos(p.angle0),
+      y: cy + p.r * Math.sin(p.angle0),
+    }))
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime
+
+      orbitalParams.forEach((p, i) => {
+        const angle = p.angle0 + (prefersReduced.current ? 0 : p.speed * elapsed)
+        const x = cx + p.r * Math.cos(angle)
+        const y = cy + p.r * Math.sin(angle)
+
+        livePosRef.current[i] = { x, y }
+
+        const el = planetGroupRefs.current[i]
+        if (el) {
+          el.setAttribute('transform', `translate(${x.toFixed(2)},${y.toFixed(2)})`)
+        }
+      })
+
+      raf = requestAnimationFrame(tick)
+    }
+
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [isInView, orbitalParams, cx, cy])
+
+  const categories = useMemo(
+    () => ['all', ...Array.from(new Set(repos.map(r => r.category)))],
+    [],
+  )
 
   const toggleRepo = useCallback((repo: Repository) => {
-    setSelectedRepo(prev => prev?.id === repo.id ? null : repo)
+    setSelectedRepo(prev => (prev?.id === repo.id ? null : repo))
   }, [])
+
+  // Orbit ring radii (deduplicated, rounded)
+  const orbitRings = useMemo(
+    () => Array.from(new Set(orbitalParams.map(p => Math.round(p.r / 4) * 4))).sort((a, b) => a - b),
+    [orbitalParams],
+  )
 
   return (
     <section
@@ -262,8 +279,8 @@ export default function GitHubGalaxy() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: [
-            'radial-gradient(ellipse 60% 50% at 30% 40%, rgba(14,165,233,0.05) 0%, transparent 60%)',
-            'radial-gradient(ellipse 50% 60% at 70% 60%, rgba(245,158,11,0.04) 0%, transparent 60%)',
+            'radial-gradient(ellipse 55% 45% at 30% 40%, rgba(14,165,233,0.05) 0%, transparent 60%)',
+            'radial-gradient(ellipse 45% 55% at 70% 60%, rgba(245,158,11,0.04) 0%, transparent 60%)',
           ].join(', '),
         }}
       />
@@ -288,8 +305,8 @@ export default function GitHubGalaxy() {
           <div className="flex flex-wrap items-center justify-center gap-2">
             {categories.map(cat => {
               const count = cat === 'all' ? repos.length : repos.filter(r => r.category === cat).length
-              const activeRepo = repos.find(r => r.category === cat)
-              const color = activeRepo?.planetColor ?? '#52525B'
+              const sample = repos.find(r => r.category === cat)
+              const color = sample?.planetColor ?? '#52525B'
               const isActive = filter === cat
               return (
                 <button
@@ -309,9 +326,10 @@ export default function GitHubGalaxy() {
           </div>
         </motion.div>
 
-        {/* Galaxy + Detail split */}
+        {/* Galaxy + Detail panel */}
         <div className="flex flex-col lg:flex-row gap-6 items-start">
-          {/* ── Star map ── */}
+
+          {/* ── Star map (SVG) ── */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={isInView ? { opacity: 1, scale: 1 } : {}}
@@ -321,7 +339,7 @@ export default function GitHubGalaxy() {
               width: '100%',
               maxWidth: selectedRepo ? '460px' : '640px',
               height: '480px',
-              background: 'rgba(0,0,10,0.85)',
+              background: 'rgba(0,0,10,0.9)',
               border: '1px solid rgba(255,255,255,0.06)',
               transition: 'max-width 0.5s ease',
             }}
@@ -329,70 +347,75 @@ export default function GitHubGalaxy() {
             <svg
               ref={svgRef}
               className="w-full h-full"
-              style={{ overflow: 'visible' }}
               viewBox={`0 0 ${dims.w} ${dims.h}`}
               preserveAspectRatio="xMidYMid meet"
             >
               {/* Background stars */}
               <StarField w={dims.w} h={dims.h} />
 
-              {/* Category connection lines */}
-              <ConnectionLines
-                positions={positions}
-                repos={filteredRepos}
-                activeCategory={filter}
-                selectedId={selectedRepo?.id ?? null}
-              />
+              {/* Orbit ring guides */}
+              {orbitRings.map(r => (
+                <circle
+                  key={r}
+                  cx={cx} cy={cy} r={r}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.04)"
+                  strokeWidth="0.6"
+                  style={{ pointerEvents: 'none' }}
+                />
+              ))}
 
               {/* Central SO star */}
               <defs>
-                <radialGradient id="so-grad" cx="40%" cy="40%" r="60%">
-                  <stop offset="0%" stopColor="#F59E0B" stopOpacity="1" />
-                  <stop offset="60%" stopColor="#F59E0B" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.1" />
+                <radialGradient id="so-grad" cx="38%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#FFF9E6" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#F59E0B" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.15" />
                 </radialGradient>
-                <filter id="so-glow">
-                  <feGaussianBlur stdDeviation="8" result="blur" />
-                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                <filter id="so-corona" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="10" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
                 </filter>
               </defs>
-              <circle cx={dims.w / 2} cy={dims.h / 2} r="26" fill="url(#so-grad)" filter="url(#so-glow)" />
-              <circle cx={dims.w / 2} cy={dims.h / 2} r="26" fill="none" stroke="#F59E0B" strokeWidth="0.8" strokeOpacity="0.6" />
+
+              {/* Corona glow */}
+              <circle cx={cx} cy={cy} r="38" fill="#F59E0B" fillOpacity="0.08" style={{ pointerEvents: 'none' }} />
+              {/* Star body */}
+              <circle cx={cx} cy={cy} r="24" fill="url(#so-grad)" filter="url(#so-corona)" style={{ pointerEvents: 'none' }} />
+              <circle cx={cx} cy={cy} r="24" fill="none" stroke="#F59E0B" strokeWidth="0.8" strokeOpacity="0.5" style={{ pointerEvents: 'none' }} />
               <text
-                x={dims.w / 2} y={dims.h / 2 + 4}
+                x={cx} y={cy + 4}
                 textAnchor="middle"
                 fill="#0A0908"
                 fontSize="10"
-                fontWeight="700"
+                fontWeight="800"
                 fontFamily="'JetBrains Mono', monospace"
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 SO
               </text>
 
-              {/* Planets */}
-              {filteredRepos.map(repo => {
-                const pos = positions.get(repo.id)
-                if (!pos) return null
-                return (
-                  <Planet
-                    key={repo.id}
-                    repo={repo}
-                    pos={pos}
-                    isSelected={selectedRepo?.id === repo.id}
-                    isFiltered={false}
-                    onClick={() => toggleRepo(repo)}
-                  />
-                )
-              })}
+              {/* Planets — rendered at (0,0), position applied via RAF transform */}
+              {filteredRepos.map((repo, i) => (
+                <Planet
+                  key={repo.id}
+                  ref={el => { planetGroupRefs.current[i] = el }}
+                  repo={repo}
+                  isSelected={selectedRepo?.id === repo.id}
+                  onClick={() => toggleRepo(repo)}
+                />
+              ))}
             </svg>
 
-            {/* Corner label */}
-            <div className="absolute bottom-3 left-4 scene-label">
+            {/* Corner labels */}
+            <div className="absolute bottom-3 left-4 scene-label pointer-events-none">
               GITHUB.COM/SAVIN2001
             </div>
             {!selectedRepo && (
-              <div className="absolute bottom-3 right-4 font-mono text-[10px] text-zinc-700">
+              <div className="absolute bottom-3 right-4 font-mono text-[10px] text-zinc-700 pointer-events-none">
                 click any planet
               </div>
             )}
@@ -415,15 +438,13 @@ export default function GitHubGalaxy() {
                   }}
                 >
                   {/* Header */}
-                  <div
-                    className="p-5 border-b"
-                    style={{ borderColor: `${selectedRepo.planetColor}15` }}
-                  >
+                  <div className="p-5 border-b" style={{ borderColor: `${selectedRepo.planetColor}15` }}>
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <div className="w-2.5 h-2.5 rounded-full" style={{ background: selectedRepo.languageColor }} />
                           <span className="font-mono text-xs text-zinc-500 capitalize">{selectedRepo.category}</span>
+                          <span className="font-mono text-xs text-zinc-600">{selectedRepo.language}</span>
                           {selectedRepo.isPrivate && (
                             <span className="font-mono text-xs px-1.5 py-0.5 rounded" style={{ color: '#F59E0B', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
                               private
@@ -453,7 +474,7 @@ export default function GitHubGalaxy() {
                   </div>
 
                   {/* Body */}
-                  <div className="p-5 space-y-4">
+                  <div className="p-5 space-y-4 max-h-[340px] overflow-y-auto">
                     <div>
                       <p className="font-mono text-xs text-zinc-600 mb-1">◈ PROBLEM SOLVED</p>
                       <p className="text-sm text-zinc-300 leading-relaxed">{selectedRepo.problem}</p>
@@ -489,15 +510,12 @@ export default function GitHubGalaxy() {
                   </div>
 
                   {/* Footer */}
-                  <div
-                    className="px-5 py-3 flex items-center justify-between border-t"
-                    style={{ borderColor: `${selectedRepo.planetColor}15` }}
-                  >
+                  <div className="px-5 py-3 flex items-center justify-between border-t" style={{ borderColor: `${selectedRepo.planetColor}15` }}>
                     <a
                       href={selectedRepo.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 font-mono text-xs transition-colors duration-200"
+                      className="flex items-center gap-2 font-mono text-xs transition-colors duration-200 cursor-none"
                       style={{ color: selectedRepo.planetColor }}
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
@@ -525,14 +543,14 @@ export default function GitHubGalaxy() {
                     <span style={{ color: '#F59E0B', fontSize: '24px' }}>◎</span>
                   </div>
                   <p className="font-mono text-xs text-zinc-600">Click any planet to explore its architecture</p>
-                  <p className="text-zinc-700 text-xs font-mono">{filteredRepos.length} projects in view</p>
+                  <p className="text-zinc-700 text-xs font-mono">{filteredRepos.length} project{filteredRepos.length !== 1 ? 's' : ''} in orbit</p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Repo quick-access grid */}
+        {/* Quick-access grid */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
