@@ -8,8 +8,8 @@ const NODES = [
     id: 'customers',
     label: 'Customers',
     description: 'End users across mobile, web, USSD, and agent banking channels',
-    x: '50%',
-    y: '8%',
+    x: 0.50,
+    y: 0.10,
     color: '#F59E0B',
     icon: '◉',
     category: 'external',
@@ -18,9 +18,9 @@ const NODES = [
     id: 'channels',
     label: 'Digital Channels',
     description: 'Web, mobile app, USSD, SMS, and API channels — meeting customers where they are',
-    x: '20%',
-    y: '28%',
-    color: '#3B82F6',
+    x: 0.18,
+    y: 0.30,
+    color: '#0EA5E9',
     icon: '⊞',
     category: 'channel',
   },
@@ -28,8 +28,8 @@ const NODES = [
     id: 'api-gw',
     label: 'API Gateway',
     description: 'Rate limiting, auth, routing, and observability at the edge',
-    x: '50%',
-    y: '28%',
+    x: 0.50,
+    y: 0.30,
     color: '#A855F7',
     icon: '◈',
     category: 'platform',
@@ -38,9 +38,9 @@ const NODES = [
     id: 'services',
     label: 'Core Services',
     description: 'Payment processing, accounts, notifications, and compliance microservices',
-    x: '80%',
-    y: '28%',
-    color: '#22C55E',
+    x: 0.82,
+    y: 0.30,
+    color: '#10B981',
     icon: '⬡',
     category: 'services',
   },
@@ -48,8 +48,8 @@ const NODES = [
     id: 'data',
     label: 'Data Layer',
     description: 'PostgreSQL, Redis cache, event streaming, analytics pipelines',
-    x: '30%',
-    y: '55%',
+    x: 0.28,
+    y: 0.58,
     color: '#F59E0B',
     icon: '◫',
     category: 'data',
@@ -58,8 +58,8 @@ const NODES = [
     id: 'infra',
     label: 'Infrastructure',
     description: 'Kubernetes orchestration, auto-scaling, multi-region deployments',
-    x: '65%',
-    y: '55%',
+    x: 0.68,
+    y: 0.58,
     color: '#EC4899',
     icon: '⬟',
     category: 'infra',
@@ -68,9 +68,9 @@ const NODES = [
     id: 'security',
     label: 'Security Layer',
     description: 'Zero-trust architecture, WAF, secret management, compliance controls',
-    x: '20%',
-    y: '80%',
-    color: '#FF3B3B',
+    x: 0.18,
+    y: 0.82,
+    color: '#EF4444',
     icon: '⊛',
     category: 'security',
   },
@@ -78,9 +78,9 @@ const NODES = [
     id: 'observe',
     label: 'Observability',
     description: 'Prometheus + Grafana, distributed tracing, log aggregation, alerting',
-    x: '80%',
-    y: '80%',
-    color: '#00FF41',
+    x: 0.82,
+    y: 0.82,
+    color: '#10B981',
     icon: '◎',
     category: 'observe',
   },
@@ -109,11 +109,12 @@ export function SystemArchitecture() {
     const updatePositions = () => {
       if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
+      const pad = 48 // px padding from edges
       const positions: Record<string, { x: number; y: number }> = {}
       NODES.forEach(node => {
         positions[node.id] = {
-          x: (parseFloat(node.x) / 100) * rect.width,
-          y: (parseFloat(node.y) / 100) * (rect.height - 100) + 50,
+          x: pad + node.x * (rect.width - pad * 2),
+          y: pad + node.y * (rect.height - pad * 2),
         }
       })
       setNodePositions(positions)
@@ -245,12 +246,15 @@ export function SystemArchitecture() {
             })}
           </svg>
 
-          {/* Nodes */}
-          {NODES.map((node, i) => (
+          {/* Nodes — positions driven by the same nodePositions used for SVG edges */}
+          {NODES.map((node, i) => {
+            const pos = nodePositions[node.id]
+            if (!pos) return null
+            return (
             <motion.div
               key={node.id}
               className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-              style={{ left: node.x, top: `calc(${node.y} + 50px)` }}
+              style={{ left: pos.x, top: pos.y }}
               initial={{ opacity: 0, scale: 0 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
               transition={{ delay: 0.5 + i * 0.08, type: 'spring', stiffness: 200, damping: 15 }}
@@ -280,7 +284,8 @@ export function SystemArchitecture() {
                 </span>
               </button>
             </motion.div>
-          ))}
+            )
+          })}
 
           {/* Tooltip */}
           {activeNodeData && (

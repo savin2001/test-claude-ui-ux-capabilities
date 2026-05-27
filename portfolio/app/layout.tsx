@@ -6,33 +6,38 @@ import { GlassDock } from '@/components/ui/GlassDock'
 import { EasterEggs } from '@/components/ui/EasterEggs'
 
 export const metadata: Metadata = {
-  title: 'Savin Osuka — Digital Channels · Platform Reliability · FinTech Builder',
+  title: 'Savin Osuka — Systems Engineer',
   description:
-    'I build, operate, secure and scale digital experiences. Turning complex systems into seamless customer experiences across FinTech, Infrastructure, and Platform Engineering.',
+    'I build payment infrastructure, platform reliability, and digital channel systems. Based in Nairobi, working globally.',
   keywords: [
     'Savin Osuka',
-    'Platform Reliability Engineer',
-    'Digital Channels Engineer',
+    'Systems Engineer',
     'FinTech Engineer',
-    'Infrastructure Engineer',
     'SRE',
+    'Platform Engineer',
     'Nairobi',
     'Kenya',
+    'M-Pesa',
   ],
   authors: [{ name: 'Savin Osuka', url: 'https://github.com/savin2001' }],
   creator: 'Savin Osuka',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    title: 'Savin Osuka — Build. Operate. Secure. Scale.',
+    title: 'Savin Osuka — Systems Engineer',
     description:
-      'Digital Channels Engineer, Platform Reliability Engineer, FinTech Builder. Turning complex systems into seamless customer experiences.',
-    siteName: 'Savin Osuka Portfolio',
+      'Payment infrastructure · Platform reliability · Digital channels. I build the systems behind seamless customer experiences.',
+    siteName: 'Savin Osuka',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Savin Osuka — Build. Operate. Secure. Scale.',
-    description: 'Digital Channels Engineer · Platform Reliability · FinTech Builder',
+    title: 'Savin Osuka — Systems Engineer',
+    description: 'Payment infrastructure · Platform reliability · Digital channels. Nairobi → Global.',
     creator: '@SavinOsuka',
   },
   robots: {
